@@ -1,3 +1,43 @@
-task wrapper(type: Wrapper) {
-    gradleVersion = '1.11'
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+def version_pdf_viewer = "3.1.0-beta.1"
+
+buildscript {
+//    ext.kotlin_version = '1.4.32'
+    ext.kotlin_version = '1.8.0'
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            url 'https://maven.fabric.io/public'
+        }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.1.2'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.0"
+//        classpath 'com.google.gms:google-services:4.3.5'
+//        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.5.2'
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
 }
+
+allprojects {
+    repositories {
+        google()
+//        mavenCentral()
+        maven {
+            url 'https://www.jitpack.io'
+        }
+        maven {
+            url 'https://maven.aliyun.com/repository/public'
+        }
+        mavenCentral()
+
+    }
+}
+
+
+//task wrapper(type: Wrapper) {
+////    gradleVersion = '3'
+//}

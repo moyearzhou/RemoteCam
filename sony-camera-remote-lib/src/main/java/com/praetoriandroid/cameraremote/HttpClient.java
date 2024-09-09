@@ -17,7 +17,7 @@ public class HttpClient {
         POST
     }
 
-    private static final int DEFAULT_CONNECTION_TIMEOUT = 3000;
+    private static final int DEFAULT_CONNECTION_TIMEOUT = 5000;
 
     private int connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
 
@@ -61,7 +61,6 @@ public class HttpClient {
             outputStream.flush();
             outputStream.close();
         }
-
         connection.connect();
 
         int responseCode = connection.getResponseCode();

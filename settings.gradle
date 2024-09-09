@@ -1,1 +1,3 @@
-include ':sony-camera-remote-lib', ':command-line-tool', ':android-app', ':praetorian-widgets-lib'
+include ':sony-camera-remote-lib', ':command-line-tool'
+include ':remote-app'
+include ':widgetview'
