@@ -1,21 +1,20 @@
 package com.praetoriandroid.cameraremote.app
 
-import android.arch.lifecycle.MutableLiveData
-import android.arch.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProvider
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.graphics.BitmapFactory
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
-import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import com.example.remote_app.R
 import com.praetoriandroid.cameraremote.LiveViewFetcher
 import com.praetoriandroid.cameraremote.app.Rpc.ConnectionListener
@@ -34,6 +33,7 @@ import org.androidannotations.annotations.UiThread
 
 class MainActivity : AppCompatActivity(), ConnectionListener {
 
+    private val TAG = "Rpc"
 
     lateinit var liveView: LiveView
     lateinit var shot: ImageButton
@@ -47,19 +47,19 @@ class MainActivity : AppCompatActivity(), ConnectionListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // 使内容扩展到状态栏和导航栏
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            window.apply {
-                // 标志位，允许内容扩展到状态栏和导航栏区域
-                decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION)
-
-                // 状态栏和导航栏透明
-                statusBarColor = android.graphics.Color.TRANSPARENT
-                navigationBarColor = android.graphics.Color.TRANSPARENT
-            }
-        }
+//        // 使内容扩展到状态栏和导航栏
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//            window.apply {
+//                // 标志位，允许内容扩展到状态栏和导航栏区域
+//                decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+//                        or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+//                        or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION)
+//
+//                // 状态栏和导航栏透明
+//                statusBarColor = android.graphics.Color.TRANSPARENT
+//                navigationBarColor = android.graphics.Color.TRANSPARENT
+//            }
+//        }
 
         viewModel = ViewModelProvider(this, ViewModelProvider.NewInstanceFactory()).get(MainViewModel::class.java)
 
@@ -67,8 +67,6 @@ class MainActivity : AppCompatActivity(), ConnectionListener {
         initListener()
 
         initRPC()
-
-
     }
 
     private fun initRPC() {
@@ -120,6 +118,19 @@ class MainActivity : AppCompatActivity(), ConnectionListener {
                 timer
             )
         })
+
+        findViewById<ImageButton>(R.id.btn_info).setOnClickListener {
+            showCameraInfoDialog()
+        }
+    }
+
+    private fun showCameraInfoDialog() {
+        val msg = "设备ip：\n" +
+                "光圈：\n"
+        val builder = AlertDialog.Builder(this)
+        builder.setMessage(msg)
+            .setPositiveButton("确定", null)
+            .show()
     }
 
     override fun onStart() {
@@ -148,7 +159,7 @@ class MainActivity : AppCompatActivity(), ConnectionListener {
                         }
 
                         override fun onFail(e: Throwable) {
-                            Log.e("@@@@@", "Shot failed", e)
+                            Log.e(TAG, "Shot failed", e)
                             viewModel.shotButtonStatus.postValue(true)
                         }
                     })
@@ -176,7 +187,7 @@ class MainActivity : AppCompatActivity(), ConnectionListener {
             }
 
             override fun onError(e: Throwable) {
-                Log.e("@@@@@", "Live view error: $e")
+                Log.e(TAG, "Live view error: $e")
                 viewModel.rpc.stopLiveView()
                 viewModel.showErrorDialog.postValue(true)
             }

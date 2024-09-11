@@ -2,7 +2,6 @@ package com.praetoriandroid.cameraremote.app;
 
 import android.util.Log;
 
-import com.google.common.primitives.Ints;
 import com.praetoriandroid.cameraremote.DeviceDescription;
 import com.praetoriandroid.cameraremote.LiveViewDisconnectedException;
 import com.praetoriandroid.cameraremote.LiveViewFetcher;
@@ -31,6 +30,8 @@ import java.util.Set;
 
 @EBean (scope = EBean.Scope.Singleton)
 public class Rpc {
+    private static final String TAG = "Rpc";
+
     private static final String RPC_NETWORK = "RPC network";
     private static final int SSDP_TIMEOUT = 8000;
     private static final int CONNECTION_TIMEOUT = 1000;
@@ -61,7 +62,6 @@ public class Rpc {
 
     public Rpc() {
         liveViewFetcher.setConnectionTimeout(CONNECTION_TIMEOUT);
-//        connect();
     }
 
     public List<Integer> getAvailableSelfTimers() {
@@ -85,7 +85,7 @@ public class Rpc {
             rpcClient.sayHello();
             GetAvailableSelfTimerResponse selfTimers = rpcClient.send(new GetAvailableSelfTimerRequest());
             if (selfTimers.isOk()) {
-                availableSelfTimers = Ints.asList(selfTimers.getAvailableTimers());
+//                availableSelfTimers = Ints.asList(selfTimers.getAvailableTimers());
             }
             onConnected(cameraServiceUrl);
         } catch (IOException e) {
@@ -99,15 +99,14 @@ public class Rpc {
     void onConnected(String cameraServiceUrl) {
         initialized = true;
         for (ConnectionListener callback : connectionListeners) {
-
-            Log.d("RPC", "连接成功：" + cameraServiceUrl);
+            Log.d(TAG, "连接成功：" + cameraServiceUrl);
             callback.onConnected();
         }
     }
 
     @UiThread
     void onConnectionFailed(Throwable e) {
-        Log.e("@@@@@", "RPC connect failed", e);
+        Log.e(TAG, "RPC connect failed", e);
         initialized = true;
         initializationError = e;
         for (ConnectionListener callback : connectionListeners) {
