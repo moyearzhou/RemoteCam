@@ -1,29 +1,32 @@
 package com.praetoriandroid.cameraremote.app
 
-import androidx.lifecycle.ViewModelProvider
 import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
-import android.util.Log
 import android.view.View
+import android.widget.Button
 import android.widget.ImageButton
+import android.widget.LinearLayout
+import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
+import com.example.remote_app.MyLogger
 import com.example.remote_app.R
-import com.praetoriandroid.cameraremote.LiveViewFetcher
+import com.example.remote_app.Tracker
+import com.example.remote_app.databinding.ActivityMainBinding
+import com.example.remote_app.databinding.LayoutParamAdjustBinding
 import com.praetoriandroid.cameraremote.app.Rpc.ConnectionListener
-import com.praetoriandroid.cameraremote.app.Rpc.LiveViewCallback
 import com.praetoriandroid.cameraremote.app.Rpc.ResponseHandler
-import com.praetoriandroid.cameraremote.rpc.ActTakePictureRequest
-import com.praetoriandroid.cameraremote.rpc.ActTakePictureResponse
+import com.praetoriandroid.cameraremote.app.preferences.SettingsActivity
+import com.praetoriandroid.cameraremote.rpc.ActZoomResponse
 import com.praetoriandroid.cameraremote.rpc.SetSelfTimerRequest
 import com.praetoriandroid.cameraremote.rpc.SimpleResponse
+import com.praetoriandroid.cameraremote.rpc.ZoomRequest
 import com.praetoriandroid.widget.RadialSelector.OnValueSelectedListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,9 +34,11 @@ import kotlinx.coroutines.launch
 import org.androidannotations.annotations.Click
 import org.androidannotations.annotations.UiThread
 
-class MainActivity : AppCompatActivity(), ConnectionListener {
+class MainActivity : BaseActivity(), ConnectionListener {
 
     private val TAG = "Rpc"
+
+    private val UPDATE_INTERVAL: Long = 1000 // 1秒钟
 
     lateinit var liveView: LiveView
     lateinit var shot: ImageButton
@@ -43,41 +48,37 @@ class MainActivity : AppCompatActivity(), ConnectionListener {
     lateinit var selfTimer: SelfTimerSelector
 
     private lateinit var viewModel: MainViewModel
+    private val mBinding by lazy {
+        ActivityMainBinding.inflate(layoutInflater)
+    }
+
+    private val handler by lazy {
+        Handler(Looper.getMainLooper())
+    }
+    private lateinit var updateTask: Runnable
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-//        // 使内容扩展到状态栏和导航栏
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-//            window.apply {
-//                // 标志位，允许内容扩展到状态栏和导航栏区域
-//                decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-//                        or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-//                        or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION)
-//
-//                // 状态栏和导航栏透明
-//                statusBarColor = android.graphics.Color.TRANSPARENT
-//                navigationBarColor = android.graphics.Color.TRANSPARENT
-//            }
-//        }
+        setContentView(mBinding.root)
 
         viewModel = ViewModelProvider(this, ViewModelProvider.NewInstanceFactory()).get(MainViewModel::class.java)
 
         initView()
         initListener()
 
-        initRPC()
-    }
+        updateTask = object : Runnable {
+            override fun run() {
+                if (viewModel.cameraViewActive && viewModel.cameraPramsInstantFetch) {
+                    viewModel.fetchExposureParam()
+                }
 
-    private fun initRPC() {
-        // 在您的 Activity 或 Fragment 中
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                viewModel.rpc.connect()
-            } catch (e: Exception) {
-                e.printStackTrace()
+                handler.postDelayed(this, UPDATE_INTERVAL)
             }
         }
+        // 开始循环任务
+        handler.post(updateTask)
+
+        viewModel.initRPC()
     }
 
     private fun initListener() {
@@ -100,10 +101,53 @@ class MainActivity : AppCompatActivity(), ConnectionListener {
         viewModel.shotButtonStatus.observe(this) { isShow ->
             shot.isEnabled = isShow!!
         }
+
+        viewModel.isoValue.observe(this) {
+            // todo 保证iso显示正确
+//            if (it < 0) {
+//                mBinding.layoutExposures.findViewById<TextView>(R.id.txt_iso).text = "-"
+//                return@observe
+//            }
+
+            // todo 确保iso是可用的
+            mBinding.layoutExposures.findViewById<TextView>(R.id.txt_iso).text = it.toString()
+        }
+
+        viewModel.shutterValue.observe(this) {
+
+            // todo 确保是可用的
+            mBinding.layoutExposures.findViewById<TextView>(R.id.txt_shutter).text = it.toString()
+        }
+
+        viewModel.apertureValue.observe(this) {
+            // todo 确保是可用的
+            mBinding.layoutExposures.findViewById<TextView>(R.id.txt_aperture).text = "f $it"
+        }
+
+        viewModel.evValue.observe(this) {
+            // todo 确保是可用的
+            mBinding.layoutExposures.findViewById<TextView>(R.id.txt_ev).text = it.toString()
+        }
+
+        viewModel.wbValue.observe(this) {
+            // todo 确保是可用的
+            // todo 考虑其他色温模式
+            if (it.colorTemperature > 0) {
+                mBinding.layoutExposures.findViewById<TextView>(R.id.txt_white_balance).text = it.colorTemperature.toString()
+            } else {
+                mBinding.layoutExposures.findViewById<TextView>(R.id.txt_white_balance).text = it.whiteBalanceMode
+            }
+
+        }
+
+        viewModel.focusValue.observe(this) {
+            // todo 确保是可用的
+            mBinding.layoutExposures.findViewById<TextView>(R.id.txt_focus).text = it.toString()
+        }
+
     }
 
     private fun initView() {
-
         liveView = findViewById(R.id.liveView)
         shot = findViewById(R.id.shot)
         progress = findViewById(R.id.progress)
@@ -119,9 +163,71 @@ class MainActivity : AppCompatActivity(), ConnectionListener {
             )
         })
 
-        findViewById<ImageButton>(R.id.btn_info).setOnClickListener {
-            showCameraInfoDialog()
+        findViewById<ImageButton>(R.id.btn_more).setOnClickListener {
+//            showCameraInfoDialog()
+            launchToSettings()
         }
+
+
+        findViewById<LinearLayout>(R.id.lv_iso_setter).setOnClickListener {
+            showIsoParamAdjuster()
+        }
+
+
+        findViewById<LinearLayout>(R.id.lv_ev_setter).setOnClickListener {
+            showEvAdjuster()
+        }
+
+        findViewById<Button>(R.id.btn_reconnect).setOnClickListener {
+            reconnectClicked()
+        }
+
+        findViewById<Button>(R.id.btn_wifi_settings).setOnClickListener {
+            wiFiSettingsClicked()
+        }
+
+    }
+
+    private fun showEvAdjuster() {
+        val binding = LayoutParamAdjustBinding.inflate(layoutInflater)
+
+        binding.txtValue.text = viewModel.evValue.value
+
+        binding.seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                binding.txtValue.text = progress.toString()
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+            }
+
+        })
+
+        val builder = AlertDialog.Builder(this)
+        builder
+            .setTitle("曝光补偿")
+            .setView(binding.root)
+            .setPositiveButton("确定"
+            ) { dialog, which ->
+
+                viewModel.setEv(evValue = 0.3f)
+            }
+            .show()
+    }
+
+    private fun showIsoParamAdjuster() {
+        viewModel.fetchAvailableIso()
+
+        val msg = "当前ISO：${viewModel.isoValue.value} \n" +
+                "可用ISO：${viewModel.availableIso.value}\n"
+        val builder = AlertDialog.Builder(this)
+        builder.setMessage(msg)
+            .setPositiveButton("确定", null)
+            .show()
+
     }
 
     private fun showCameraInfoDialog() {
@@ -135,69 +241,36 @@ class MainActivity : AppCompatActivity(), ConnectionListener {
 
     override fun onStart() {
         super.onStart()
+        MyLogger.d("==========onStart==========")
         viewModel.rpc.registerInitCallback(this)
     }
 
     override fun onStop() {
         super.onStop()
-        viewModel.rpc.unregisterInitCallback(this)
-        viewModel.rpc.stopLiveView()
+        viewModel.stopPause(this)
+
+        viewModel.cameraViewActive = false
     }
 
     private fun shotClicked() {
+        // 关闭拍摄按钮
         viewModel.shotButtonStatus.postValue(false)
-
-        // 在您的 Activity 或 Fragment 中
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                viewModel.rpc.sendRequest(
-                    ActTakePictureRequest(),
-                    shot,
-                    object : ResponseHandler<ActTakePictureResponse> {
-                        override fun onSuccess(response: ActTakePictureResponse) {
-                            viewModel.shotButtonStatus.postValue(true)
-                        }
-
-                        override fun onFail(e: Throwable) {
-                            Log.e(TAG, "Shot failed", e)
-                            viewModel.shotButtonStatus.postValue(true)
-                        }
-                    })
-
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
+        // 开始拍摄
+        viewModel.takeShot()
     }
 
-    @UiThread(propagation = UiThread.Propagation.REUSE)
     override fun onConnected() {
-        viewModel.showProgress.postValue(false)
-        viewModel.shotButtonStatus.postValue(true)
-
         showToast("连接成功")
 
-        if (isFinishing) {
-            return
-        }
-        viewModel.rpc.startLiveView(object : LiveViewCallback {
-            override fun onNextFrame(frame: LiveViewFetcher.Frame) {
-                val bitmap = BitmapFactory.decodeByteArray(frame.buffer, 0, frame.size)
-                liveView.putFrame(bitmap)
-            }
+        viewModel.onConnected()
 
-            override fun onError(e: Throwable) {
-                Log.e(TAG, "Live view error: $e")
-                viewModel.rpc.stopLiveView()
-                viewModel.showErrorDialog.postValue(true)
-            }
-        })
+        // 开始实时画面传输预览
+        viewModel.startLiveView(liveView)
+
     }
 
-    @UiThread(propagation = UiThread.Propagation.REUSE)
     override fun onConnectionFailed(e: Throwable) {
-        viewModel.showProgress.postValue(false)
-        viewModel.showErrorDialog.postValue(true)
+        viewModel.onConnectionFailed(e)
     }
 
     @Click
@@ -216,7 +289,8 @@ class MainActivity : AppCompatActivity(), ConnectionListener {
     fun reconnectClicked() {
         dismissConnectionErrorDialog()
         showProgress()
-        viewModel.rpc.connect()
+
+        viewModel.initRPC()
     }
 
     fun showProgress() {
@@ -238,6 +312,23 @@ class MainActivity : AppCompatActivity(), ConnectionListener {
     @Click
     fun zoomClicked() {
         Toast.makeText(this, "zoom", Toast.LENGTH_SHORT).show()
+
+        CoroutineScope(Dispatchers.IO).launch {
+            viewModel.rpc.sendRequest(
+                ZoomRequest(),
+                "zoom",
+                object : ResponseHandler<ActZoomResponse> {
+                    override fun onSuccess(response: ActZoomResponse) {
+                        showToast("zoom成功")
+                    }
+
+                    override fun onFail(e: Throwable) {
+                        showToast("zoom失败: $e")
+                        e.printStackTrace()
+                    }
+                })
+        }
+
     }
 
     private fun onSelfTimerSelected(timerValue: Int) {
@@ -251,6 +342,7 @@ class MainActivity : AppCompatActivity(), ConnectionListener {
 
                 override fun onFail(e: Throwable) {
                     showToast("Failed to set self timer")
+                    e.printStackTrace()
                 }
             })
     }
@@ -260,6 +352,15 @@ class MainActivity : AppCompatActivity(), ConnectionListener {
         Handler(Looper.getMainLooper()).post { // 更新 UI
             Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
         }
+    }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        MyLogger.e("=================应用被杀死")
+    }
+
+    private fun launchToSettings() {
+        val intent = Intent(this, SettingsActivity::class.java)
+        startActivity(intent)
     }
 }

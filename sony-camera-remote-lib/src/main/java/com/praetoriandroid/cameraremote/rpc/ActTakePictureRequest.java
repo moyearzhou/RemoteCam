@@ -5,3 +5,5 @@ public class ActTakePictureRequest extends BaseRequest<Void, ActTakePictureRespo
         super(ActTakePictureResponse.class, RpcMethod.actTakePicture);
     }
 }
+
+

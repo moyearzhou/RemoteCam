@@ -166,15 +166,16 @@ public class LiveViewFetcher {
         httpClient.setConnectionTimeout(timeout);
     }
 
-    public void connect(String url) throws IOException {
+    public synchronized void connect(String url) throws IOException {
         closed = false;
         inputStream = httpClient.get(url);
     }
 
-    public void disconnect() throws IOException {
+    public synchronized void disconnect() throws IOException {
         closed = true;
         if (inputStream != null) {
-            inputStream.close();
+            // todo 等其他线程释放该对象才关闭
+//            inputStream.close();
         }
     }
 

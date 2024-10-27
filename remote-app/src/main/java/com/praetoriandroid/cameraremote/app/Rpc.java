@@ -64,11 +64,17 @@ public class Rpc {
         liveViewFetcher.setConnectionTimeout(CONNECTION_TIMEOUT);
     }
 
+    private Thread threadLiveWatch;
+
     public List<Integer> getAvailableSelfTimers() {
         return availableSelfTimers;
     }
 
-    @Background (serial = RPC_NETWORK)
+    public boolean isInitialized() {
+        return initialized;
+    }
+
+//    @Background (serial = RPC_NETWORK)
     public void connect() {
         try {
             initialized = false;
@@ -95,7 +101,7 @@ public class Rpc {
         }
     }
 
-    @UiThread
+//    @UiThread
     void onConnected(String cameraServiceUrl) {
         initialized = true;
         for (ConnectionListener callback : connectionListeners) {
@@ -208,6 +214,7 @@ public class Rpc {
     public void stopLiveView() {
         try {
             liveViewInProgress = false;
+            // todo 关闭预览监听
             liveViewFetcher.disconnect();
         } catch (IOException e) {
             e.printStackTrace();
@@ -215,7 +222,7 @@ public class Rpc {
     }
 
     private void onLiveViewStarted(final String url, final LiveViewCallback callback) {
-        new Thread() {
+        threadLiveWatch = new Thread() {
             @Override
             public void run() {
                 try {
@@ -231,7 +238,8 @@ public class Rpc {
                 } catch (LiveViewDisconnectedException ignored) {
                 }
             }
-        }.start();
+        };
+        threadLiveWatch.start();
     }
 
     public static class ErrorResponseException extends RpcException {

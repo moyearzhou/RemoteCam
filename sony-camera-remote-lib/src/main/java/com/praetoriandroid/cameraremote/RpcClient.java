@@ -1,5 +1,7 @@
 package com.praetoriandroid.cameraremote;
 
+import android.util.Log;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.praetoriandroid.cameraremote.rpc.BaseRequest;
@@ -38,7 +40,15 @@ public class RpcClient {
     }
 
     public void sayHello() throws RpcException {
+
+        Log.d("Moyear", "sayHello");
+
         GetApplicationInfoResponse appInfo = send(new GetApplicationInfoRequest());
+
+        Log.d("Moyear",
+                "applicationName: " + appInfo.getApplicationName()
+                        + "\nversion: " + appInfo.getVersion());
+
         if (!appInfo.isVersionOk()) {
             throw new RpcException("Illegal camera API version (must be at least 2.0.0): "
                     + appInfo.getVersion());
@@ -68,8 +78,10 @@ public class RpcClient {
         try {
             String requestText = gson.toJson(request);
             debug("Request: %s", requestText);
+            Log.e("Request: %s", requestText);
+
             String responseText = httpClient.fetchTextByPost(cameraServiceUrl, requestText);
-            debug("Response: %s", responseText);
+            Log.e("Response: %s", responseText);
             Response response = request.parseResponse(gson, responseText);
             response.validate();
             return response;

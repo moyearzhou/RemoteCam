@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="通用设置">
+
+        <ListPreference
+            android:key="example_list"
+            android:title="导入的影像尺寸"
+            android:summary="选择导入相机的大小"
+            android:entries="@array/example_list_entries"
+            android:entryValues="@array/example_list_values"
+            android:defaultValue="原始"/>
+
+        <CheckBoxPreference
+            android:key="example_checkbox"
+            android:title="位置信息关联"
+            android:summary="将手机位置信息与蓝牙配对的拍摄装置关联"
+            android:defaultValue="false"/>
+
+<!--        <EditTextPreference-->
+<!--            android:key="example_text"-->
+<!--            android:title="Enter text"-->
+<!--            android:summary="Enter some text here"-->
+<!--            android:defaultValue="default value"/>-->
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

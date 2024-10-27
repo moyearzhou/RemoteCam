@@ -18,8 +18,8 @@ import java.util.List;
  * @param <Value> item data value type.
  */
 public abstract class RadialSelector<ItemView extends View, Value>
-        extends ImageButton
-        implements ItemViewCreator<ItemView, Value> {
+        extends androidx.appcompat.widget.AppCompatImageButton
+        implements com.praetoriandroid.widget.ItemViewCreator<ItemView, Value> {
     public interface OnValueSelectedListener<Value> {
         public void onValueSelected(Value value);
     }

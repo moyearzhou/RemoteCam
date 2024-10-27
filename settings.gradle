@@ -1,3 +1,4 @@
 include ':sony-camera-remote-lib', ':command-line-tool'
 include ':remote-app'
 include ':widgetview'
+include ':graph-process'

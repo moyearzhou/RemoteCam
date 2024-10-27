@@ -78,4 +78,8 @@ public enum RpcMethod {
 
     startAudioRec,
     stopAudioRec,
+
+    getFocusMode,
+
+    setFocusMode
 }
