@@ -1,0 +1,10 @@
+<resources>
+    <!-- Default screen margins, per the Android Design guidelines. -->
+
+    <dimen name="shot_button_size">56dp</dimen>
+
+    <dimen name="default_spacing">15dp</dimen>
+    <dimen name="large_spacing">45dp</dimen>
+    <dimen name="margin_params">10dp</dimen>
+
+</resources>

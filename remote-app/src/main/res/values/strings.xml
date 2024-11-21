@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">SonyRemoter</string>
+    <string name="cd_shot">shot</string>
+    <string name="connection_label">正在连接到相机...</string>
+    <!--<string name="connection_error_title">Connection error</string>-->
+    <string name="connection_error_description">你需要连接到相机Wi-Fi.</string>
+    <string name="wi_fi_settings">Wi-Fi设置</string>
+    <string name="reconnect">重新连接</string>
+    <string name="error_no_wi_fi_settings_activity">Unfortunately unable to launch "Wi-Fi settings"</string>
+    <string name="cd_self_timer">self timer</string>
+    <string name="cd_zoom">zoom</string>
+    <string name="title_activity_test">TestActivity</string>
+
+
+    <string-array name="example_list_entries">
+        <item>default</item>
+        <item>2m</item>
+        <item>vga</item>
+    </string-array>
+    <string-array name="example_list_values">
+        <item>原始</item>
+        <item>2M</item>
+        <item>VGA(仅限兼容模式)</item>
+    </string-array>
+
+</resources>
