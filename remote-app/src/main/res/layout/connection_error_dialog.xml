@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/cover">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minWidth="280dp"
+        android:layout_gravity="center"
+        android:background="@android:color/black"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:paddingHorizontal="@dimen/default_spacing"
+        android:paddingVertical="20dp">
+
+        <TextView
+            style="@style/TextAppearance.AppCompat.Subhead"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/default_spacing"
+            android:gravity="center"
+            android:textColor="@android:color/white"
+            android:text="@string/connection_error_description" />
+
+        <Button
+            android:id="@+id/btn_wifi_settings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:layout_marginLeft="@dimen/large_spacing"
+            android:layout_marginRight="@dimen/large_spacing"
+            android:text="@string/wi_fi_settings" />
+
+        <Button
+            android:id="@+id/btn_reconnect"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/large_spacing"
+            android:layout_marginRight="@dimen/large_spacing"
+            android:text="@string/reconnect" />
+
+    </LinearLayout>
+
+</FrameLayout>
